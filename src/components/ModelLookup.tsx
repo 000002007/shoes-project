@@ -1,13 +1,8 @@
 import { useState } from 'react'
 import type { Attributes, Confidence } from '../types'
+import { CATEGORIES as CATEGORY, STRETCHES as STRETCH, SIZE_REPUTATIONS as SIZE_REP, WIDTH_REPUTATIONS as WIDTH_REP, TOE_BOXES as TOEBOX } from '../types'
 import { lookupModel } from '../lib/api'
 import { confidenceLabel, confidenceColor } from '../lib/confidence'
-
-const CATEGORY: ReadonlyArray<Attributes['category']> = ['running', 'lifestyle', 'basketball', 'training', 'hiking', 'other', 'unknown']
-const STRETCH: ReadonlyArray<Attributes['stretch']> = ['stretchy', 'moderate', 'rigid', 'unknown']
-const SIZE_REP: ReadonlyArray<Attributes['sizeReputation']> = ['runs_small', 'true_to_size', 'runs_large', 'unknown']
-const WIDTH_REP: ReadonlyArray<Attributes['widthReputation']> = ['narrow', 'standard', 'wide', 'unknown']
-const TOEBOX: ReadonlyArray<Attributes['toeBox']> = ['low', 'standard', 'roomy', 'unknown']
 
 function emptyAttributes(model: string): Attributes {
   return {

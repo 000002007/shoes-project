@@ -1,10 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import type { FootMeasurement, SizeSystem, WidthCategory } from '../foot/types'
+import { WIDTH_CATEGORIES as WIDTH_CATS, SIZE_SYSTEMS } from '../foot/types'
 import { referenceWarnings } from '../foot/reference'
 import { mmToSize } from '../foot/sizing'
-
-const WIDTH_CATS: ReadonlyArray<WidthCategory> = ['narrow', 'standard', 'wide']
-const SIZE_SYSTEMS: ReadonlyArray<SizeSystem> = ['EU', 'US_M', 'UK']
 
 // Принимаем только положительное число (с точкой или запятой), без мусора в хвосте.
 // '0', '-3', '26.5xyz' → undefined, чтобы не считать их валидным замером.
