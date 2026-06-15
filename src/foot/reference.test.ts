@@ -9,6 +9,14 @@ describe('hasReference', () => {
   it('размер → есть', () => { expect(hasReference(m({ sizeValue: 42, sizeSystem: 'EU' }))).toBe(true) })
   it('только ширина → нет', () => { expect(hasReference(m({ widthMm: 100 }))).toBe(false) })
   it('пусто → нет', () => { expect(hasReference(m({}))).toBe(false) })
+  it('0 или отрицательная длина → нет', () => {
+    expect(hasReference(m({ lengthMm: 0 }))).toBe(false)
+    expect(hasReference(m({ lengthMm: -30 }))).toBe(false)
+  })
+  it('0 или отрицательный размер → нет', () => {
+    expect(hasReference(m({ sizeValue: 0, sizeSystem: 'EU' }))).toBe(false)
+    expect(hasReference(m({ sizeValue: -1, sizeSystem: 'EU' }))).toBe(false)
+  })
 })
 
 describe('referenceWarnings', () => {
@@ -22,8 +30,19 @@ describe('referenceWarnings', () => {
     expect(w.some((x) => /недостоверна/i.test(x))).toBe(false)
     expect(w.some((x) => /ширина/i.test(x))).toBe(true)
   })
-  it('нетипичная длина → предупреждение', () => {
-    const w = referenceWarnings(m({ lengthMm: 500 }))
-    expect(w.some((x) => /нетипичн/i.test(x))).toBe(true)
+  it('слишком большая длина → нетипичная', () => {
+    expect(referenceWarnings(m({ lengthMm: 500 })).some((x) => /нетипичн/i.test(x))).toBe(true)
+  })
+  it('слишком маленькая длина (<150) → нетипичная', () => {
+    expect(referenceWarnings(m({ lengthMm: 100 })).some((x) => /нетипичн/i.test(x))).toBe(true)
+  })
+  it('ширина в мм убирает предупреждение про ширину', () => {
+    expect(referenceWarnings(m({ lengthMm: 265, widthMm: 100 })).some((x) => /ширина/i.test(x))).toBe(false)
+  })
+  it('категория ширины убирает предупреждение про ширину', () => {
+    expect(referenceWarnings(m({ lengthMm: 265, widthCategory: 'wide' })).some((x) => /ширина/i.test(x))).toBe(false)
+  })
+  it('нетипичный размер → предупреждение', () => {
+    expect(referenceWarnings(m({ sizeValue: 999, sizeSystem: 'EU' })).some((x) => /нетипичн/i.test(x))).toBe(true)
   })
 })

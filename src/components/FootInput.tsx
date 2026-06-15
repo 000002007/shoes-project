@@ -6,9 +6,12 @@ import { mmToSize } from '../foot/sizing'
 const WIDTH_CATS: ReadonlyArray<WidthCategory> = ['narrow', 'standard', 'wide']
 const SIZE_SYSTEMS: ReadonlyArray<SizeSystem> = ['EU', 'US_M', 'UK']
 
+// Принимаем только положительное число (с точкой или запятой), без мусора в хвосте.
+// '0', '-3', '26.5xyz' → undefined, чтобы не считать их валидным замером.
 function parseNum(s: string): number | undefined {
+  if (!/^\s*\d+([.,]\d+)?\s*$/.test(s)) return undefined
   const v = parseFloat(s.replace(',', '.'))
-  return Number.isFinite(v) ? v : undefined
+  return Number.isFinite(v) && v > 0 ? v : undefined
 }
 
 const hint: CSSProperties = { display: 'block', fontSize: 12, color: '#666' }
