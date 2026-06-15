@@ -1,0 +1,17 @@
+{
+  "name": "shoes-project-server",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.mjs",
+    "dev": "node --watch index.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}
