@@ -34,4 +34,23 @@ describe('ModelLookup', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
     expect(await screen.findByText(/подтверждены/i)).toBeInTheDocument()
   })
+
+  it('при ошибке показывает сообщение и кнопку ручного ввода', async () => {
+    vi.mocked(lookupModel).mockRejectedValue(new Error('LLM не настроен'))
+    render(<ModelLookup />)
+    await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'X')
+    await userEvent.click(screen.getByRole('button', { name: 'Найти' }))
+    expect(await screen.findByText('LLM не настроен')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Заполнить вручную' })).toBeInTheDocument()
+  })
+
+  it('«Заполнить вручную» открывает редактируемую форму', async () => {
+    vi.mocked(lookupModel).mockRejectedValue(new Error('boom'))
+    render(<ModelLookup />)
+    await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'My Shoe')
+    await userEvent.click(screen.getByRole('button', { name: 'Найти' }))
+    await screen.findByText('boom')
+    await userEvent.click(screen.getByRole('button', { name: 'Заполнить вручную' }))
+    expect(await screen.findByRole('button', { name: 'Подтвердить' })).toBeInTheDocument()
+  })
 })

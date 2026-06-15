@@ -3,11 +3,11 @@ import type { Attributes, Confidence } from '../types'
 import { lookupModel } from '../lib/api'
 import { confidenceLabel, confidenceColor } from '../lib/confidence'
 
-const CATEGORY = ['running', 'lifestyle', 'basketball', 'training', 'hiking', 'other', 'unknown'] as const
-const STRETCH = ['stretchy', 'moderate', 'rigid', 'unknown'] as const
-const SIZE_REP = ['runs_small', 'true_to_size', 'runs_large', 'unknown'] as const
-const WIDTH_REP = ['narrow', 'standard', 'wide', 'unknown'] as const
-const TOEBOX = ['low', 'standard', 'roomy', 'unknown'] as const
+const CATEGORY: ReadonlyArray<Attributes['category']> = ['running', 'lifestyle', 'basketball', 'training', 'hiking', 'other', 'unknown']
+const STRETCH: ReadonlyArray<Attributes['stretch']> = ['stretchy', 'moderate', 'rigid', 'unknown']
+const SIZE_REP: ReadonlyArray<Attributes['sizeReputation']> = ['runs_small', 'true_to_size', 'runs_large', 'unknown']
+const WIDTH_REP: ReadonlyArray<Attributes['widthReputation']> = ['narrow', 'standard', 'wide', 'unknown']
+const TOEBOX: ReadonlyArray<Attributes['toeBox']> = ['low', 'standard', 'roomy', 'unknown']
 
 function emptyAttributes(model: string): Attributes {
   return {
@@ -47,22 +47,24 @@ export default function ModelLookup() {
 
   return (
     <section>
-      <label htmlFor="model-input" style={{ display: 'block', marginBottom: 4 }}>Модель кроссовок</label>
-      <input
-        id="model-input"
-        value={model}
-        onChange={(e) => setModel(e.target.value)}
-        placeholder="Напр. Nike Pegasus 40"
-        style={{ padding: 8, width: '100%', maxWidth: 360 }}
-      />
-      <button onClick={search} disabled={loading || !model.trim()} style={{ marginLeft: 8, padding: '8px 16px' }}>
-        {loading ? 'Идёт поиск…' : 'Найти'}
-      </button>
+      <form onSubmit={(e) => { e.preventDefault(); if (!loading && model.trim()) search() }}>
+        <label htmlFor="model-input" style={{ display: 'block', marginBottom: 4 }}>Модель кроссовок</label>
+        <input
+          id="model-input"
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          placeholder="Напр. Nike Pegasus 40"
+          style={{ padding: 8, width: '100%', maxWidth: 360 }}
+        />
+        <button type="submit" disabled={loading || !model.trim()} style={{ marginLeft: 8, padding: '8px 16px' }}>
+          {loading ? 'Идёт поиск…' : 'Найти'}
+        </button>
+      </form>
 
       {error && (
         <div style={{ marginTop: 16 }}>
           <p style={{ color: '#cf222e' }}>{error}</p>
-          <button onClick={() => { setAttrs(emptyAttributes(model)); setError(null) }}>
+          <button type="button" onClick={() => { setAttrs(emptyAttributes(model)); setError(null) }}>
             Заполнить вручную
           </button>
         </div>
