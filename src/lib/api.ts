@@ -1,7 +1,7 @@
 import type { Attributes, LookupResponse } from '../types'
 
 const BASE = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, '')
-  || 'http://localhost:8787'
+  || 'http://localhost:8788'
 
 export async function lookupModel(model: string): Promise<Attributes> {
   const res = await fetch(`${BASE}/api/lookup`, {
