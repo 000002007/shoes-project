@@ -1,6 +1,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { server } from '../app.mjs';
+import { server, createApp } from '../app.mjs';
+import { anthropicLookup } from '../anthropicProvider.mjs';
 
 let base;
 before(async () => {
@@ -43,4 +44,22 @@ test('POST /api/lookup неизвестная модель → confidence low', 
   assert.equal(res.status, 200);
   const data = await res.json();
   assert.equal(data.attributes.confidence, 'low');
+});
+
+test('POST /api/lookup при anthropic-провайдере без ключа → 503 llm_not_configured', async () => {
+  const srv = createApp({ kind: 'anthropic', lookup: anthropicLookup });
+  await new Promise((r) => srv.listen(0, r));
+  const { port } = srv.address();
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/lookup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'Nike Pegasus 40' }),
+    });
+    assert.equal(res.status, 503);
+    const data = await res.json();
+    assert.equal(data.error, 'llm_not_configured');
+  } finally {
+    await new Promise((r) => srv.close(r));
+  }
 });

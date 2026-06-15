@@ -1,5 +1,8 @@
-// Заглушка. Реальный вызов Claude API + веб-поиск (вариант b) добавим, когда
-// будет ключ ANTHROPIC_API_KEY. Сейчас сигнализируем «не настроено».
+// Заглушка. Реальный вызов Claude API + веб-поиск (вариант b) добавим, когда будет
+// ключ ANTHROPIC_API_KEY. Сейчас сигнализируем «не настроено» ТИПИЗИРОВАННЫМ кодом
+// ошибки (err.code), а не текстом сообщения — чтобы HTTP-слой не зависел от формулировки.
 export async function anthropicLookup(/* model */) {
-  throw new Error('ANTHROPIC_PROVIDER_NOT_CONFIGURED');
+  const err = new Error('Anthropic-провайдер не настроен: нет ключа ANTHROPIC_API_KEY.');
+  err.code = 'LLM_NOT_CONFIGURED';
+  throw err;
 }

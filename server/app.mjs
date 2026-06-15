@@ -6,9 +6,6 @@ import { validateAttributes } from './attributes.mjs';
 const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173')
   .split(',').map((s) => s.trim()).filter(Boolean);
 
-const provider = getProvider();
-export const providerKind = provider.kind;
-
 function setCors(req, res) {
   const origin = req.headers.origin;
   if (origin && (CORS_ORIGINS.includes(origin) || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))) {
@@ -32,37 +29,45 @@ async function readJsonBody(req) {
   return JSON.parse(raw);
 }
 
-export const server = createServer(async (req, res) => {
-  setCors(req, res);
-  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+// Создаёт http-сервер. Провайдер можно передать (удобно для тестов);
+// по умолчанию берётся из env через getProvider().
+export function createApp(provider = getProvider()) {
+  return createServer(async (req, res) => {
+    setCors(req, res);
+    if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
-  try {
-    if (req.method === 'GET' && req.url === '/api/health') {
-      return json(res, 200, { ok: true });
-    }
-
-    if (req.method === 'POST' && req.url === '/api/lookup') {
-      const body = await readJsonBody(req).catch(() => null);
-      const model = body && typeof body.model === 'string' ? body.model.trim() : '';
-      if (!model) return json(res, 400, { error: 'model_required', message: 'Укажите название модели.' });
-
-      const normalized = normalizeModelName(model);
-      let attrs;
-      try {
-        attrs = await provider.lookup(model);
-      } catch (e) {
-        if (String(e?.message).includes('NOT_CONFIGURED')) {
-          return json(res, 503, { error: 'llm_not_configured', message: 'LLM-провайдер не настроен. Введите атрибуты вручную.' });
-        }
-        throw e;
+    try {
+      if (req.method === 'GET' && req.url === '/api/health') {
+        return json(res, 200, { ok: true });
       }
 
-      const attributes = validateAttributes(attrs);
-      return json(res, 200, { normalized, attributes });
-    }
+      if (req.method === 'POST' && req.url === '/api/lookup') {
+        const body = await readJsonBody(req).catch(() => null);
+        const model = body && typeof body.model === 'string' ? body.model.trim() : '';
+        if (!model) return json(res, 400, { error: 'model_required', message: 'Укажите название модели.' });
 
-    return json(res, 404, { error: 'not_found' });
-  } catch {
-    return json(res, 500, { error: 'internal_error' });
-  }
-});
+        const normalized = normalizeModelName(model);
+        let attrs;
+        try {
+          attrs = await provider.lookup(model);
+        } catch (e) {
+          if (e?.code === 'LLM_NOT_CONFIGURED') {
+            return json(res, 503, { error: 'llm_not_configured', message: 'LLM-провайдер не настроен. Введите атрибуты вручную.' });
+          }
+          throw e;
+        }
+
+        const attributes = validateAttributes(attrs);
+        return json(res, 200, { normalized, attributes });
+      }
+
+      return json(res, 404, { error: 'not_found' });
+    } catch {
+      return json(res, 500, { error: 'internal_error' });
+    }
+  });
+}
+
+const defaultProvider = getProvider();
+export const providerKind = defaultProvider.kind;
+export const server = createApp(defaultProvider);
