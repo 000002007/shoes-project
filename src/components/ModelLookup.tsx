@@ -71,7 +71,7 @@ export default function ModelLookup() {
       )}
 
       {attrs && (
-        <form style={{ marginTop: 24, display: 'grid', gap: 12, maxWidth: 480 }}>
+        <form onSubmit={(e) => e.preventDefault()} style={{ marginTop: 24, display: 'grid', gap: 12, maxWidth: 480 }}>
           <div>Уверенность: {badge(attrs.confidence)}</div>
 
           <label>Бренд

@@ -16,6 +16,8 @@ function setCors(req, res) {
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Origin отражается выборочно — помечаем, чтобы кэши/прокси не смешивали ответы.
+  res.setHeader('Vary', 'Origin');
 }
 
 function json(res, status, body) {
