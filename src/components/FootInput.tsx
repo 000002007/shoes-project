@@ -44,7 +44,7 @@ export default function FootInput({ onChange }: { onChange?: (m: FootMeasurement
   return (
     <section style={{ display: 'grid', gap: 12, maxWidth: 480, marginTop: 32 }}>
       <h2>Твоя стопа</h2>
-      <p style={hint}>Меряй бо́льшую стопу. Лучше всего — обведя её на листе A4.</p>
+      <p style={hint}>Стопы немного асимметричны — меряй обе и бери бо́льшую (по ней и считаем). Лучше всего — обведя её на листе A4.</p>
 
       <div>
         <label htmlFor="foot-length">Длина стопы (см)</label>

@@ -37,9 +37,10 @@ describe('FitOverlay', () => {
     expect(screen.getByText(/ширина не измерена/i)).toBeInTheDocument()
   })
 
-  it('всегда показывает дисклеймер «приблизительно, 2D»', () => {
+  it('дисклеймер: 2D + честно про обхват/объём как главный фактор посадки', () => {
     render(<FitOverlay attrs={attrs()} foot={foot({ lengthMm: 265, widthMm: 100 })} />)
     expect(screen.getByText(/приблизительно, 2D/i)).toBeInTheDocument()
+    expect(screen.getByText(/обхват/i)).toBeInTheDocument()
   })
 
   it('показывает достоверность оценки (confidence) в UI', () => {
