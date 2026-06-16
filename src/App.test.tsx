@@ -31,9 +31,9 @@ describe('App (общее состояние модели и стопы)', () =>
     await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
     expect(screen.queryByText(/Рекомендуемый размер/i)).not.toBeInTheDocument()
 
-    // вводим длину стопы → появляется ориентир → готовность к шагу 3
+    // вводим длину стопы → появляется ориентир → оверлей, data-driven (265мм → EU 42)
     await userEvent.type(screen.getByLabelText('Длина стопы (см)'), '26.5')
-    expect(await screen.findByText(/Рекомендуемый размер/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Рекомендуемый размер: EU 42/i)).toBeInTheDocument()
   })
 
   it('правка модели после подтверждения убирает оверлей (поднятое состояние не рассинхронизируется)', async () => {
