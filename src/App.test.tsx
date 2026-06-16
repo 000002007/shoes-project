@@ -17,26 +17,26 @@ const SAMPLE: Attributes = {
 describe('App (общее состояние модели и стопы)', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  it('готовность к шагу 3 появляется только когда есть и подтверждённая модель, и ориентир стопы', async () => {
+  it('оверлей посадки появляется только когда есть и подтверждённая модель, и ориентир стопы', async () => {
     vi.mocked(lookupModel).mockResolvedValue(SAMPLE)
     render(<App />)
 
     // изначально нет ни модели, ни ориентира → готовности нет
-    expect(screen.queryByText(/Готово к шагу 3/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Рекомендуемый размер/i)).not.toBeInTheDocument()
 
     // подтверждаем модель — но стопы с ориентиром ещё нет
     await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'Nike Pegasus 40')
     await userEvent.click(screen.getByRole('button', { name: 'Найти' }))
     await screen.findByDisplayValue('Nike')
     await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
-    expect(screen.queryByText(/Готово к шагу 3/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Рекомендуемый размер/i)).not.toBeInTheDocument()
 
     // вводим длину стопы → появляется ориентир → готовность к шагу 3
     await userEvent.type(screen.getByLabelText('Длина стопы (см)'), '26.5')
-    expect(await screen.findByText(/Готово к шагу 3/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Рекомендуемый размер/i)).toBeInTheDocument()
   })
 
-  it('правка модели после подтверждения убирает готовность (поднятое состояние не рассинхронизируется)', async () => {
+  it('правка модели после подтверждения убирает оверлей (поднятое состояние не рассинхронизируется)', async () => {
     vi.mocked(lookupModel).mockResolvedValue(SAMPLE)
     render(<App />)
     await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'Nike Pegasus 40')
@@ -44,10 +44,10 @@ describe('App (общее состояние модели и стопы)', () =>
     await screen.findByDisplayValue('Nike')
     await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
     await userEvent.type(screen.getByLabelText('Длина стопы (см)'), '26.5')
-    expect(await screen.findByText(/Готово к шагу 3/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Рекомендуемый размер/i)).toBeInTheDocument()
 
     // правим бренд после подтверждения → модель больше не подтверждена → готовности нет
     await userEvent.type(screen.getByDisplayValue('Nike'), ' Air')
-    expect(screen.queryByText(/Готово к шагу 3/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Рекомендуемый размер/i)).not.toBeInTheDocument()
   })
 })
