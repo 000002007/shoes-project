@@ -35,6 +35,17 @@ describe('ModelLookup', () => {
     expect(await screen.findByText(/подтверждены/i)).toBeInTheDocument()
   })
 
+  it('при подтверждении вызывает onConfirm с текущими атрибутами', async () => {
+    vi.mocked(lookupModel).mockResolvedValue(SAMPLE)
+    const onConfirm = vi.fn()
+    render(<ModelLookup onConfirm={onConfirm} />)
+    await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'Nike Pegasus 40')
+    await userEvent.click(screen.getByRole('button', { name: 'Найти' }))
+    await screen.findByDisplayValue('Nike')
+    await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
+    expect(onConfirm).toHaveBeenCalledWith(SAMPLE)
+  })
+
   it('при ошибке показывает сообщение и кнопку ручного ввода', async () => {
     vi.mocked(lookupModel).mockRejectedValue(new Error('LLM не настроен'))
     render(<ModelLookup />)

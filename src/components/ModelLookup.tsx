@@ -12,7 +12,7 @@ function emptyAttributes(model: string): Attributes {
   }
 }
 
-export default function ModelLookup() {
+export default function ModelLookup({ onConfirm }: { onConfirm?: (attrs: Attributes) => void } = {}) {
   const [model, setModel] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -107,7 +107,7 @@ export default function ModelLookup() {
             <textarea value={attrs.notes} onChange={(e) => update('notes', e.target.value)} rows={2} />
           </label>
 
-          <button type="button" onClick={() => setConfirmed(true)} style={{ padding: '8px 16px' }}>
+          <button type="button" onClick={() => { setConfirmed(true); if (attrs) onConfirm?.(attrs) }} style={{ padding: '8px 16px' }}>
             Подтвердить
           </button>
           {confirmed && <p style={{ color: '#1a7f37' }}>Атрибуты подтверждены.</p>}
