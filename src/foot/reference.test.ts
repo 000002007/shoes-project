@@ -8,6 +8,9 @@ describe('hasReference', () => {
   it('длина → есть', () => { expect(hasReference(m({ lengthMm: 265 }))).toBe(true) })
   it('размер → есть', () => { expect(hasReference(m({ sizeValue: 42, sizeSystem: 'EU' }))).toBe(true) })
   it('только ширина → нет', () => { expect(hasReference(m({ widthMm: 100 }))).toBe(false) })
+  it('размер без системы → нет (нечем конвертировать)', () => {
+    expect(hasReference(m({ sizeValue: 42 }))).toBe(false)
+  })
   it('пусто → нет', () => { expect(hasReference(m({}))).toBe(false) })
   it('0 или отрицательная длина → нет', () => {
     expect(hasReference(m({ lengthMm: 0 }))).toBe(false)

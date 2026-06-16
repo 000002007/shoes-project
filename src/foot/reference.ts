@@ -2,9 +2,10 @@ import type { FootMeasurement } from './types'
 
 // Ориентир есть, только если длина ИЛИ размер — положительное число.
 // (0, отрицательное и т.п. не считаются ориентиром — иначе пропали бы предупреждения.)
+// Размер без системы (EU/US/UK) не считается ориентиром — его нечем конвертировать в мм.
 export function hasReference(m: FootMeasurement): boolean {
   return (typeof m.lengthMm === 'number' && m.lengthMm > 0)
-    || (typeof m.sizeValue === 'number' && m.sizeValue > 0)
+    || (typeof m.sizeValue === 'number' && m.sizeValue > 0 && !!m.sizeSystem)
 }
 
 // Честные предупреждения о недостоверности/неполноте.

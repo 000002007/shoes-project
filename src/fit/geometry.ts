@@ -18,6 +18,8 @@ export interface FitResult {
   lengthZone: Zone
   widthZone: Zone
   widthEstimated: boolean
+  lengthFromSize: boolean   // длина выведена из размера (не измерена напрямую)
+  lengthAutoFitted: boolean // «впору» по длине лишь потому, что размер подобран под стопу — не оценка модели
   confidence: 'high' | 'medium' | 'low'
   notes: string[]
 }
@@ -25,6 +27,11 @@ export interface FitResult {
 // Пороги запаса (мм). Стартовые, калибруются; длина/ширина раздельно.
 const LENGTH_THRESHOLDS = { tight: 3, loose: 16 }
 const WIDTH_THRESHOLDS = { tight: 2, loose: 10 }
+
+// Правдоподобный диапазон длины стопы (мм). Вне него — не рисуем (честно «нетипично»),
+// иначе геометрия даёт бессмыслицу (отрицательная ширина, EU NaN/3).
+const PLAUSIBLE_MIN_MM = 150
+const PLAUSIBLE_MAX_MM = 400
 
 function classify(margin: number, t: { tight: number; loose: number }): Zone {
   return margin < t.tight ? 'tight' : margin > t.loose ? 'loose' : 'fit'
@@ -50,14 +57,23 @@ export function fitGeometry(foot: FootMeasurement, attrs: Attributes): FitResult
   if (!hasReference(foot)) {
     return {
       drawable: false, lengthZone: 'unknown', widthZone: 'unknown',
-      widthEstimated: false, confidence: 'low',
+      widthEstimated: false, lengthFromSize: false, lengthAutoFitted: false, confidence: 'low',
       notes: ['Укажи длину стопы или размер — тогда покажем посадку.'],
     }
   }
 
-  const notes: string[] = []
   const { lenMm, fromSize } = footLength(foot)
-  const footLenMm = lenMm as number // hasReference гарантирует длину/размер
+  // Вне правдоподобного диапазона (или без длины) честно не рисуем — иначе бессмыслица.
+  if (lenMm === undefined || lenMm < PLAUSIBLE_MIN_MM || lenMm > PLAUSIBLE_MAX_MM) {
+    return {
+      drawable: false, lengthZone: 'unknown', widthZone: 'unknown',
+      widthEstimated: false, lengthFromSize: fromSize, lengthAutoFitted: false, confidence: 'low',
+      notes: ['Длина стопы выглядит нетипичной — проверь ввод (ждём примерно 150–400 мм).'],
+    }
+  }
+  const footLenMm = lenMm
+
+  const notes: string[] = []
   if (fromSize) notes.push('Длина выведена из размера — менее точно.')
 
   const { internalLenMm, internalWidthMm, recommendedSizeEu } = internalContour(footLenMm, attrs)
@@ -68,6 +84,20 @@ export function fitGeometry(foot: FootMeasurement, attrs: Attributes): FitResult
     notes.push('Репутация модели неизвестна — взяли нейтрально, точность ниже.')
   }
 
+  const lengthMargin = internalLenMm - footLenMm
+  const widthMargin = internalWidthMm - fw.widthMm
+  const lengthZone = classify(lengthMargin, LENGTH_THRESHOLDS)
+  const widthZone = classify(widthMargin, WIDTH_THRESHOLDS)
+
+  // Размер подбираем ПОД длину стопы, поэтому при нейтральной репутации длина всегда «впору»
+  // по построению — это не оценка модели. Помечаем честно, сигнал по длине несёт только
+  // отклонение из-за репутации (runs_small/large).
+  const repNeutral = attrs.sizeReputation === 'true_to_size' || attrs.sizeReputation === 'unknown'
+  const lengthAutoFitted = lengthZone === 'fit' && repNeutral
+  if (lengthAutoFitted) {
+    notes.push(`Длину подобрали размером (EU ${recommendedSizeEu}) — это не отдельная оценка модели по длине; смотри ширину.`)
+  }
+
   let penalty = 0
   if (fw.estimated) penalty++
   if (fromSize) penalty++
@@ -76,17 +106,16 @@ export function fitGeometry(foot: FootMeasurement, attrs: Attributes): FitResult
   if (attrs.confidence === 'low') penalty++
   const confidence: FitResult['confidence'] = penalty === 0 ? 'high' : penalty === 1 ? 'medium' : 'low'
 
-  const lengthMargin = internalLenMm - footLenMm
-  const widthMargin = internalWidthMm - fw.widthMm
-
   return {
     drawable: true,
     footLenMm, footWidthMm: fw.widthMm,
     internalLenMm, internalWidthMm, recommendedSizeEu,
     lengthMargin, widthMargin,
-    lengthZone: classify(lengthMargin, LENGTH_THRESHOLDS),
-    widthZone: classify(widthMargin, WIDTH_THRESHOLDS),
+    lengthZone,
+    widthZone,
     widthEstimated: fw.estimated,
+    lengthFromSize: fromSize,
+    lengthAutoFitted,
     confidence,
     notes,
   }

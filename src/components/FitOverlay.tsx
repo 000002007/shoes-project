@@ -1,12 +1,15 @@
 import type { CSSProperties } from 'react'
-import type { Attributes } from '../types'
+import type { Attributes, Confidence } from '../types'
 import type { FootMeasurement } from '../foot/types'
 import { fitGeometry, type Zone } from '../fit/geometry'
+import { confidenceColor } from '../lib/confidence'
 
 const ZONE_RU: Record<Zone, string> = { tight: 'тесно', fit: 'впору', loose: 'свободно', unknown: 'неизвестно' }
 const ZONE_COLOR: Record<Zone, string> = { tight: '#cf222e', fit: '#1a7f37', loose: '#9a6700', unknown: '#666' }
+const CONF_RU: Record<Confidence, string> = { high: 'высокая', medium: 'средняя', low: 'низкая' }
 
 const hint: CSSProperties = { fontSize: 12, color: '#666' }
+const NEUTRAL = '#666'
 const PX_PER_MM = 0.8
 const PAD = 16
 
@@ -53,12 +56,22 @@ export default function FitOverlay({ attrs, foot }: { attrs: Attributes; foot: F
       </svg>
 
       <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
-        <div>Длина: <strong style={{ color: ZONE_COLOR[fit.lengthZone] }}>{ZONE_RU[fit.lengthZone]}</strong></div>
+        {fit.lengthAutoFitted ? (
+          // Длина «впору» лишь по построению (размер подобрали под стопу) — не вердикт по модели.
+          <div style={hint}>Длина: подобрана под размер (EU {fit.recommendedSizeEu})</div>
+        ) : (
+          <div>Длина: <strong style={{ color: ZONE_COLOR[fit.lengthZone] }}>{ZONE_RU[fit.lengthZone]}</strong></div>
+        )}
         <div>
-          Ширина: <strong style={{ color: ZONE_COLOR[fit.widthZone] }}>{ZONE_RU[fit.widthZone]}</strong>
-          {fit.widthEstimated && <span style={hint}> (оценка)</span>}
+          Ширина: <strong style={{ color: fit.widthEstimated ? NEUTRAL : ZONE_COLOR[fit.widthZone] }}>{ZONE_RU[fit.widthZone]}</strong>
+          {fit.widthEstimated && <span style={hint}> (оценка по категории, не замер)</span>}
         </div>
-        <div style={hint}>Рекомендуемый размер: EU {fit.recommendedSizeEu}</div>
+        <div style={hint}>
+          {fit.lengthFromSize ? 'Твой размер' : 'Рекомендуемый размер'}: EU {fit.recommendedSizeEu}
+        </div>
+        <div style={hint}>
+          Достоверность оценки: <strong style={{ color: confidenceColor(fit.confidence) }}>{CONF_RU[fit.confidence]}</strong>
+        </div>
       </div>
 
       {fit.notes.length > 0 && (
