@@ -5,4 +5,4 @@ dist
 
 # QA / браузерные артефакты
 .playwright-mcp/
-step3-overlay.png
+step3-overlay*.png
