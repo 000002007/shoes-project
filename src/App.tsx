@@ -19,7 +19,7 @@ export default function App() {
     <main style={{ maxWidth: 640, margin: '0 auto', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
       <h1>Примерка: как сидят кроссовки</h1>
       <p>Шаг 1 — модель и её атрибуты. Шаг 2 — твоя стопа.</p>
-      <ModelLookup onConfirm={setAttributes} />
+      <ModelLookup onConfirmedChange={setAttributes} />
       <FootInput onChange={setFoot} />
       {readyForFit && (
         <p style={{ marginTop: 24, color: '#1a7f37' }}>

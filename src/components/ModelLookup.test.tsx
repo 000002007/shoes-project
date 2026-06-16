@@ -35,15 +35,41 @@ describe('ModelLookup', () => {
     expect(await screen.findByText(/подтверждены/i)).toBeInTheDocument()
   })
 
-  it('при подтверждении вызывает onConfirm с текущими атрибутами', async () => {
+  it('при подтверждении отдаёт текущие атрибуты через onConfirmedChange', async () => {
     vi.mocked(lookupModel).mockResolvedValue(SAMPLE)
-    const onConfirm = vi.fn()
-    render(<ModelLookup onConfirm={onConfirm} />)
+    const onConfirmedChange = vi.fn()
+    render(<ModelLookup onConfirmedChange={onConfirmedChange} />)
     await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'Nike Pegasus 40')
     await userEvent.click(screen.getByRole('button', { name: 'Найти' }))
     await screen.findByDisplayValue('Nike')
     await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
-    expect(onConfirm).toHaveBeenCalledWith(SAMPLE)
+    expect(onConfirmedChange).toHaveBeenLastCalledWith(SAMPLE)
+  })
+
+  it('подтверждение передаёт ОТРЕДАКТИРОВАННЫЕ атрибуты, а не исходные', async () => {
+    vi.mocked(lookupModel).mockResolvedValue(SAMPLE)
+    const onConfirmedChange = vi.fn()
+    render(<ModelLookup onConfirmedChange={onConfirmedChange} />)
+    await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'Nike Pegasus 40')
+    await userEvent.click(screen.getByRole('button', { name: 'Найти' }))
+    const brand = await screen.findByDisplayValue('Nike')
+    await userEvent.clear(brand)
+    await userEvent.type(brand, 'Adidas')
+    await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
+    expect(onConfirmedChange).toHaveBeenLastCalledWith(expect.objectContaining({ brand: 'Adidas' }))
+  })
+
+  it('правка после подтверждения сбрасывает подтверждение (onConfirmedChange ← null)', async () => {
+    vi.mocked(lookupModel).mockResolvedValue(SAMPLE)
+    const onConfirmedChange = vi.fn()
+    render(<ModelLookup onConfirmedChange={onConfirmedChange} />)
+    await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'Nike Pegasus 40')
+    await userEvent.click(screen.getByRole('button', { name: 'Найти' }))
+    const brand = await screen.findByDisplayValue('Nike')
+    await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
+    expect(onConfirmedChange).toHaveBeenLastCalledWith(SAMPLE)
+    await userEvent.type(brand, ' Air')
+    expect(onConfirmedChange).toHaveBeenLastCalledWith(null)
   })
 
   it('при ошибке показывает сообщение и кнопку ручного ввода', async () => {

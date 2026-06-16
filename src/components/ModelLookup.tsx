@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Attributes, Confidence } from '../types'
 import { CATEGORIES as CATEGORY, STRETCHES as STRETCH, SIZE_REPUTATIONS as SIZE_REP, WIDTH_REPUTATIONS as WIDTH_REP, TOE_BOXES as TOEBOX } from '../types'
 import { lookupModel } from '../lib/api'
@@ -12,7 +12,7 @@ function emptyAttributes(model: string): Attributes {
   }
 }
 
-export default function ModelLookup({ onConfirm }: { onConfirm?: (attrs: Attributes) => void } = {}) {
+export default function ModelLookup({ onConfirmedChange }: { onConfirmedChange?: (attrs: Attributes | null) => void } = {}) {
   const [model, setModel] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -35,6 +35,15 @@ export default function ModelLookup({ onConfirm }: { onConfirm?: (attrs: Attribu
     setAttrs((a) => (a ? { ...a, [key]: value } : a))
     setConfirmed(false)
   }
+
+  // Наверх отдаём атрибуты, только пока они ПОДТВЕРЖДЕНЫ и не изменены после этого;
+  // любая правка сбрасывает confirmed → шлём null, чтобы поднятое состояние в App
+  // не рассинхронизировалось с тем, что пользователь видит в форме.
+  useEffect(() => {
+    onConfirmedChange?.(confirmed && attrs ? attrs : null)
+    // зависим от confirmed/attrs, колбэк считаем стабильным (как в FootInput.onChange)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [confirmed, attrs])
 
   const badge = (c: Confidence) => (
     <span style={{ color: confidenceColor(c), fontWeight: 600 }}>{confidenceLabel(c)}</span>
@@ -107,7 +116,7 @@ export default function ModelLookup({ onConfirm }: { onConfirm?: (attrs: Attribu
             <textarea value={attrs.notes} onChange={(e) => update('notes', e.target.value)} rows={2} />
           </label>
 
-          <button type="button" onClick={() => { setConfirmed(true); if (attrs) onConfirm?.(attrs) }} style={{ padding: '8px 16px' }}>
+          <button type="button" onClick={() => setConfirmed(true)} style={{ padding: '8px 16px' }}>
             Подтвердить
           </button>
           {confirmed && <p style={{ color: '#1a7f37' }}>Атрибуты подтверждены.</p>}

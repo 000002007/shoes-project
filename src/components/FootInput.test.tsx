@@ -23,6 +23,18 @@ describe('FootInput', () => {
     expect(screen.getByText(/недостоверна/i)).toBeInTheDocument()
   })
 
+  it('отрицательное "-3" не считается ориентиром — предупреждение остаётся', async () => {
+    render(<FootInput />)
+    await userEvent.type(screen.getByLabelText('Длина стопы (см)'), '-3')
+    expect(screen.getByText(/недостоверна/i)).toBeInTheDocument()
+  })
+
+  it('мусор в хвосте "26.5xyz" не считается ориентиром — предупреждение остаётся', async () => {
+    render(<FootInput />)
+    await userEvent.type(screen.getByLabelText('Длина стопы (см)'), '26.5xyz')
+    expect(screen.getByText(/недостоверна/i)).toBeInTheDocument()
+  })
+
   it('сообщает FootMeasurement через onChange (запятая, ширина, размер)', async () => {
     const onChange = vi.fn()
     render(<FootInput onChange={onChange} />)

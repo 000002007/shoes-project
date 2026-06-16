@@ -35,4 +35,19 @@ describe('App (общее состояние модели и стопы)', () =>
     await userEvent.type(screen.getByLabelText('Длина стопы (см)'), '26.5')
     expect(await screen.findByText(/Готово к шагу 3/i)).toBeInTheDocument()
   })
+
+  it('правка модели после подтверждения убирает готовность (поднятое состояние не рассинхронизируется)', async () => {
+    vi.mocked(lookupModel).mockResolvedValue(SAMPLE)
+    render(<App />)
+    await userEvent.type(screen.getByLabelText('Модель кроссовок'), 'Nike Pegasus 40')
+    await userEvent.click(screen.getByRole('button', { name: 'Найти' }))
+    await screen.findByDisplayValue('Nike')
+    await userEvent.click(screen.getByRole('button', { name: 'Подтвердить' }))
+    await userEvent.type(screen.getByLabelText('Длина стопы (см)'), '26.5')
+    expect(await screen.findByText(/Готово к шагу 3/i)).toBeInTheDocument()
+
+    // правим бренд после подтверждения → модель больше не подтверждена → готовности нет
+    await userEvent.type(screen.getByDisplayValue('Nike'), ' Air')
+    expect(screen.queryByText(/Готово к шагу 3/i)).not.toBeInTheDocument()
+  })
 })
