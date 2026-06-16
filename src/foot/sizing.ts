@@ -21,6 +21,8 @@ export function mmToSize(lengthMm: number, system: SizeSystem): number {
   }
 }
 
+// Задел под шаг 3 (вердикт): когда у пользователя есть только размер без длины,
+// переводим размер → внутренние мм. В UI пока не вызывается, но покрыт тестами.
 export function sizeToMm(value: number, system: SizeSystem): number {
   let eu: number
   switch (system) {
