@@ -24,4 +24,16 @@ describe('lookupModel', () => {
       new Response(JSON.stringify({ message: 'LLM не настроен' }), { status: 503 })))
     await expect(lookupModel('x')).rejects.toThrow('LLM не настроен')
   })
+
+  it('тело-JSON без поля message → дефолтное сообщение', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response(JSON.stringify({ error: 'oops' }), { status: 500 })))
+    await expect(lookupModel('x')).rejects.toThrow('Не удалось получить атрибуты')
+  })
+
+  it('не-JSON тело ошибки → дефолтное сообщение (парсинг не валит запрос)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response('<html>502 Bad Gateway</html>', { status: 502 })))
+    await expect(lookupModel('x')).rejects.toThrow('Не удалось получить атрибуты')
+  })
 })
